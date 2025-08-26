@@ -1,10 +1,11 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Link, Navigate, useParams } from 'react-router-dom';
-import Profile from './Components/Profile';
 import { getProducts } from './services/products';
 import type { Product } from './models/Product';
 import { getProduct } from './services/products';
 import { useCartStore } from './store/cart';
+import Loader from './components/ui/Loader';
+import ErrorMessage from './components/ui/ErrorMessage';
 
 function Catalog() {
   const [items, setItems] = React.useState<Product[] | null>(null);
@@ -27,7 +28,7 @@ function Catalog() {
     return (
       <div className="p-4">
         <h1 className="text-2xl font-semibold mb-2">Catalog</h1>
-        <p className="text-red-600">{error}</p>
+        <ErrorMessage message={error} />
       </div>
     );
   }
@@ -36,7 +37,7 @@ function Catalog() {
     return (
       <div className="p-4">
         <h1 className="text-2xl font-semibold mb-2">Catalog</h1>
-        <p className="text-gray-600">Loading…</p>
+        <Loader />
       </div>
     );
   }
@@ -83,7 +84,7 @@ function ProductPage() {
     return (
       <div className="p-4">
         <h1 className="text-2xl font-semibold mb-2">Product</h1>
-        <p className="text-red-600">{error}</p>
+        <ErrorMessage message={error} />
       </div>
     );
   }
@@ -92,7 +93,7 @@ function ProductPage() {
     return (
       <div className="p-4">
         <h1 className="text-2xl font-semibold mb-2">Product</h1>
-        <p className="text-gray-600">Loading…</p>
+        <Loader />
       </div>
     );
   }
@@ -161,9 +162,6 @@ export default function App() {
       <nav className="px-4 py-3 border-b flex gap-4 items-center">
         <Link to="/catalog" className="text-blue-600">Catalog</Link>
         <Link to="/cart" className="text-blue-600">Cart</Link>
-        <div className="ml-auto">
-          <Profile />
-        </div>
       </nav>
       <Routes>
         <Route path="/" element={<Navigate to="/catalog" replace />} />
