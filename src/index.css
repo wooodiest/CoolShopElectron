@@ -1,3 +1,7 @@
+@plugin "flowbite/plugin";
+@source "../node_modules/flowbite-react/lib/esm/**/*.js";
+@source "../node_modules/flowbite/**/*.js";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

@@ -1,8 +1,12 @@
+import React from 'react';
+import { Button } from 'flowbite-react';
+
 export default function Profile() {
   return (
-    <img
-      src="https://i.imgur.com/MK3eW3Am.jpg"
-      alt="Katherine Johnson"
-    />
-  )
+    <div className="p-4">
+      <Button color="blue" onClick={() => alert('Flowbite works!')}>
+        Flowbite Button
+      </Button>
+    </div>
+  );
 }
