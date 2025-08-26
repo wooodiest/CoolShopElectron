@@ -6,8 +6,8 @@ import ErrorMessage from '../components/ui/ErrorMessage';
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation() as any;
-  const [username, setUsername] = React.useState('');
-  const [password, setPassword] = React.useState('');
+  const [username, setUsername] = React.useState('kminchelle');
+  const [password, setPassword] = React.useState('0lelplR');
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(false);
   const login = useAuthStore(s => s.login);
@@ -44,6 +44,7 @@ export default function Login() {
         <button disabled={loading} className="w-full px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-60">
           {loading ? 'Signing in…' : 'Sign in'}
         </button>
+        <p className="text-xs text-gray-500">Tip: Dummy credentials prefilled (kminchelle / 0lelplR)</p>
       </form>
     </div>
   );
