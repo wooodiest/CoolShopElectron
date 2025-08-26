@@ -1,11 +1,14 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Link, Navigate, useParams } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, Navigate, useParams, useNavigate } from 'react-router-dom';
+import Loader from './components/ui/Loader';
+import ErrorMessage from './components/ui/ErrorMessage';
 import { getProducts } from './services/products';
 import type { Product } from './models/Product';
 import { getProduct } from './services/products';
 import { useCartStore } from './store/cart';
-import Loader from './components/ui/Loader';
-import ErrorMessage from './components/ui/ErrorMessage';
+import { useAuthStore } from './store/auth';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import Login from './routes/Login';
 
 function Catalog() {
   const [items, setItems] = React.useState<Product[] | null>(null);
@@ -113,6 +116,25 @@ function ProductPage() {
   );
 }
 
+function NavBar() {
+  const isAuthenticated = useAuthStore(s => s.isAuthenticated);
+  const logout = useAuthStore(s => s.logout);
+  const navigate = useNavigate();
+  return (
+    <nav className="px-4 py-3 border-b flex gap-4 items-center">
+      <Link to="/catalog" className="text-blue-600">Catalog</Link>
+      <Link to="/cart" className="text-blue-600">Cart</Link>
+      <div className="ml-auto flex items-center gap-3">
+        {isAuthenticated ? (
+          <button className="px-3 py-1 bg-gray-200 rounded" onClick={() => { logout(); navigate('/catalog'); }}>Logout</button>
+        ) : (
+          <Link to="/login" className="px-3 py-1 bg-blue-600 text-white rounded">Login</Link>
+        )}
+      </div>
+    </nav>
+  );
+}
+
 function Cart() {
   const items = useCartStore(s => s.items);
   const removeItem = useCartStore(s => s.removeItem);
@@ -159,15 +181,13 @@ function Cart() {
 export default function App() {
   return (
     <BrowserRouter>
-      <nav className="px-4 py-3 border-b flex gap-4 items-center">
-        <Link to="/catalog" className="text-blue-600">Catalog</Link>
-        <Link to="/cart" className="text-blue-600">Cart</Link>
-      </nav>
+      <NavBar />
       <Routes>
         <Route path="/" element={<Navigate to="/catalog" replace />} />
         <Route path="/catalog" element={<Catalog />} />
         <Route path="/product/:id" element={<ProductPage />} />
-        <Route path="/cart" element={<Cart />} />
+        <Route path="/cart" element={<ProtectedRoute><div><Cart /></div></ProtectedRoute>} />
+        <Route path="/login" element={<Login />} />
       </Routes>
     </BrowserRouter>
   );
