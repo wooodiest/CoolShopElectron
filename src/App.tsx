@@ -1,7 +1,8 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Link, Navigate, useParams, useNavigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Link, Navigate, useParams, useNavigate } from 'react-router-dom';
 import Loader from './components/ui/Loader';
 import ErrorMessage from './components/ui/ErrorMessage';
+import CachedImage from './components/ui/CachedImage';
 import { getProducts } from './services/products';
 import type { Product } from './models/Product';
 import { getProduct } from './services/products';
@@ -13,15 +14,32 @@ import Login from './routes/Login';
 function Catalog() {
   const [items, setItems] = React.useState<Product[] | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const [loading, setLoading] = React.useState<boolean>(false);
+
+  const load = React.useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getProducts();
+      setItems(data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   React.useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
+        setLoading(true);
         const data = await getProducts();
         if (!cancelled) setItems(data);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Error');
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     })();
     return () => { cancelled = true };
@@ -30,16 +48,22 @@ function Catalog() {
   if (error) {
     return (
       <div className="p-4">
-        <h1 className="text-2xl font-semibold mb-2">Catalog</h1>
-        <ErrorMessage message={error} />
+        <div className="flex items-center justify-between mb-2">
+          <h1 className="text-2xl font-semibold">Catalog</h1>
+          <button className="px-3 py-1 bg-gray-200 rounded" onClick={load} disabled={loading}>Refresh</button>
+        </div>
+        <ErrorMessage message={error} onRetry={load} />
       </div>
     );
   }
 
-  if (!items) {
+  if (loading || !items) {
     return (
       <div className="p-4">
-        <h1 className="text-2xl font-semibold mb-2">Catalog</h1>
+        <div className="flex items-center justify-between mb-2">
+          <h1 className="text-2xl font-semibold">Catalog</h1>
+          <button className="px-3 py-1 bg-gray-200 rounded" onClick={load} disabled={loading}>Refresh</button>
+        </div>
         <Loader />
       </div>
     );
@@ -47,11 +71,14 @@ function Catalog() {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-semibold mb-4">Catalog</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-semibold">Catalog</h1>
+        <button className="px-3 py-1 bg-gray-200 rounded" onClick={load} disabled={loading}>Refresh</button>
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {items.map(p => (
           <Link key={p.id} to={`/product/${p.id}`} className="border rounded-lg overflow-hidden hover:shadow">
-            <img src={p.thumbnail} alt={p.title} className="w-full h-40 object-cover" />
+            <CachedImage src={p.thumbnail} alt={p.title} className="w-full h-40 object-cover" />
             <div className="p-3">
               <div className="font-medium truncate">{p.title}</div>
               <div className="text-sm text-gray-600">${p.price}</div>
@@ -67,17 +94,35 @@ function ProductPage() {
   const { id } = useParams();
   const [product, setProduct] = React.useState<Product | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const [loading, setLoading] = React.useState<boolean>(false);
   const addItem = useCartStore(s => s.addItem);
 
-  React.useEffect(() => {
+  const load = React.useCallback(async () => {
     if (!id) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getProduct(Number(id));
+      setProduct(data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error');
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  React.useEffect(() => {
     let cancelled = false;
     (async () => {
+      if (!id) return;
       try {
+        setLoading(true);
         const data = await getProduct(Number(id));
         if (!cancelled) setProduct(data);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Error');
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     })();
     return () => { cancelled = true };
@@ -86,16 +131,22 @@ function ProductPage() {
   if (error) {
     return (
       <div className="p-4">
-        <h1 className="text-2xl font-semibold mb-2">Product</h1>
-        <ErrorMessage message={error} />
+        <div className="flex items-center justify-between mb-2">
+          <h1 className="text-2xl font-semibold">Product</h1>
+          <button className="px-3 py-1 bg-gray-200 rounded" onClick={load} disabled={loading}>Refresh</button>
+        </div>
+        <ErrorMessage message={error} onRetry={load} />
       </div>
     );
   }
 
-  if (!product) {
+  if (loading || !product) {
     return (
       <div className="p-4">
-        <h1 className="text-2xl font-semibold mb-2">Product</h1>
+        <div className="flex items-center justify-between mb-2">
+          <h1 className="text-2xl font-semibold">Product</h1>
+          <button className="px-3 py-1 bg-gray-200 rounded" onClick={load} disabled={loading}>Refresh</button>
+        </div>
         <Loader />
       </div>
     );
@@ -103,7 +154,7 @@ function ProductPage() {
 
   return (
     <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-      <img src={product.thumbnail} alt={product.title} className="w-full h-64 object-cover rounded" />
+      <CachedImage src={product.thumbnail} alt={product.title} className="w-full h-64 object-cover rounded" />
       <div>
         <h1 className="text-3xl font-semibold mb-2">{product.title}</h1>
         <div className="text-xl text-gray-700 mb-4">${product.price}</div>
@@ -119,12 +170,29 @@ function ProductPage() {
 function NavBar() {
   const isAuthenticated = useAuthStore(s => s.isAuthenticated);
   const logout = useAuthStore(s => s.logout);
+  const [isOnline, setIsOnline] = React.useState<boolean>(navigator.onLine);
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    function handleOnline() { setIsOnline(true); }
+    function handleOffline() { setIsOnline(false); }
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   return (
     <nav className="px-4 py-3 border-b flex gap-4 items-center">
       <Link to="/catalog" className="text-blue-600">Catalog</Link>
       <Link to="/cart" className="text-blue-600">Cart</Link>
-      <div className="ml-auto flex items-center gap-3">
+      <div className="ml-auto flex items-center gap-4">
+        <span className={`inline-flex items-center gap-1 text-sm ${isOnline ? 'text-green-700' : 'text-red-700'}`}>
+          <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-600' : 'bg-red-600'}`} />
+          {isOnline ? 'Online' : 'Offline'}
+        </span>
         {isAuthenticated ? (
           <button className="px-3 py-1 bg-gray-200 rounded" onClick={() => { logout(); navigate('/catalog'); }}>Logout</button>
         ) : (
@@ -157,7 +225,7 @@ function Cart() {
       <div className="space-y-4">
         {entries.map(({ product, quantity }) => (
           <div key={product.id} className="flex items-center gap-3 border rounded p-2">
-            <img src={product.thumbnail} alt={product.title} className="w-16 h-16 object-cover rounded" />
+            <CachedImage src={product.thumbnail} alt={product.title} className="w-16 h-16 object-cover rounded" />
             <div className="flex-1">
               <div className="font-medium">{product.title}</div>
               <div className="text-sm text-gray-600">${product.price}</div>
@@ -180,7 +248,7 @@ function Cart() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <NavBar />
       <Routes>
         <Route path="/" element={<Navigate to="/catalog" replace />} />
@@ -189,6 +257,6 @@ export default function App() {
         <Route path="/cart" element={<ProtectedRoute><div><Cart /></div></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
