@@ -1,5 +1,5 @@
 import type { Product } from '../models/Product';
-import { getCache, setCache } from '../lib/idb';
+import { getCache, setCache, clearCache } from '../lib/idb';
 import { cacheImage } from '../lib/imageCache';
 
 const API_BASE = 'https://dummyjson.com';
@@ -39,10 +39,17 @@ async function refreshProductCache(id: number): Promise<void> {
 export async function getProducts(): Promise<Product[]> {
   const cacheKey = 'list:default';
 
-  const cached = await getCache<Product[]>('products', cacheKey);
-  if (cached && isFresh(cached.ts)) {
-    void refreshProductsCache();
-    return cached.data;
+  try {
+    const cached = await getCache<Product[]>('products', cacheKey);
+    if (cached && isFresh(cached.ts)) {
+      void refreshProductsCache();
+      return cached.data;
+    }
+  } catch (error) {
+    console.warn('Cache error, clearing cache:', error);
+    try {
+      await clearCache();
+    } catch {}
   }
 
   try {
@@ -50,13 +57,20 @@ export async function getProducts(): Promise<Product[]> {
     if (!res.ok) throw new Error('Network error');
     const json = await res.json();
     const products = (json?.products ?? []) as Product[];
-    await setCache('products', cacheKey, products);
-    void cacheProductImages(products);
+    try {
+      await setCache('products', cacheKey, products);
+      void cacheProductImages(products);
+    } catch (cacheError) {
+      console.warn('Failed to cache products:', cacheError);
+    }
     return products;
   } catch (error) {
-    if (cached) {
-      return cached.data;
-    }
+    try {
+      const cached = await getCache<Product[]>('products', cacheKey);
+      if (cached) {
+        return cached.data;
+      }
+    } catch {}
     throw new Error('Failed to load products (no cache available).');
   }
 }
@@ -64,23 +78,37 @@ export async function getProducts(): Promise<Product[]> {
 export async function getProduct(id: number): Promise<Product> {
   const cacheKey = `item:${id}`;
 
-  const cached = await getCache<Product>('products', cacheKey);
-  if (cached && isFresh(cached.ts)) {
-    void refreshProductCache(id);
-    return cached.data;
+  try {
+    const cached = await getCache<Product>('products', cacheKey);
+    if (cached && isFresh(cached.ts)) {
+      void refreshProductCache(id);
+      return cached.data;
+    }
+  } catch (error) {
+    console.warn('Cache error, clearing cache:', error);
+    try {
+      await clearCache();
+    } catch {}
   }
 
   try {
     const res = await fetch(`${API_BASE}/products/${id}`);
     if (!res.ok) throw new Error('Network error');
     const product = await res.json() as Product;
-    await setCache('products', cacheKey, product);
-    void cacheImage(product.thumbnail);
+    try {
+      await setCache('products', cacheKey, product);
+      void cacheImage(product.thumbnail);
+    } catch (cacheError) {
+      console.warn('Failed to cache product:', cacheError);
+    }
     return product;
   } catch (error) {
-    if (cached) {
-      return cached.data;
-    }
+    try {
+      const cached = await getCache<Product>('products', cacheKey);
+      if (cached) {
+        return cached.data;
+      }
+    } catch {}
     throw new Error('Failed to load product (no cache available).');
   }
 } 
