@@ -2,9 +2,12 @@ import React from 'react';
 
 export default function Loader({ label = 'Loading…' }: { label?: string }) {
   return (
-    <div className="flex items-center gap-3 text-gray-600">
-      <span className="inline-block w-5 h-5 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
-      <span>{label}</span>
+    <div className="flex flex-col items-center justify-center space-y-4">
+      <div className="relative">
+        <div className="w-12 h-12 border-4 border-blue-200 rounded-full animate-spin"></div>
+        <div className="absolute top-0 left-0 w-12 h-12 border-4 border-transparent border-t-blue-600 rounded-full animate-spin"></div>
+      </div>
+      <div className="text-gray-600 font-medium">{label}</div>
     </div>
   );
 } 

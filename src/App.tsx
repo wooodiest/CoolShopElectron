@@ -10,14 +10,18 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 export default function App() {
   return (
     <HashRouter>
-      <NavBar />
-      <Routes>
-        <Route path="/" element={<Navigate to="/catalog" replace />} />
-        <Route path="/catalog" element={<Catalog />} />
-        <Route path="/product/:id" element={<ProductPage />} />
-        <Route path="/cart" element={<ProtectedRoute><div><Cart /></div></ProtectedRoute>} />
-        <Route path="/login" element={<Login />} />
-      </Routes>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+        <NavBar />
+        <main className="container mx-auto px-4 py-8">
+          <Routes>
+            <Route path="/" element={<Navigate to="/catalog" replace />} />
+            <Route path="/catalog" element={<Catalog />} />
+            <Route path="/product/:id" element={<ProductPage />} />
+            <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+            <Route path="/login" element={<Login />} />
+          </Routes>
+        </main>
+      </div>
     </HashRouter>
   );
 }
