@@ -70,7 +70,7 @@ export default function Cart() {
             </div>
             <div className="divide-y divide-gray-100">
               {entries.map(({ product, quantity }) => {
-                const priceInfo = formatPrice(product.price, product.discountPercentage);
+                const priceInfo   = formatPrice(product.price, product.discountPercentage);
                 const stockStatus = getStockStatus(product.stock, product.availabilityStatus);
                 
                 return (
@@ -151,11 +151,6 @@ export default function Cart() {
                           <button
                             onClick={() => {
                               const cartItem = useCartStore.getState().items[product.id];
-                              const currentInCart = cartItem?.quantity ?? 0;
-                              if (currentInCart + quantity >= product.stock) {
-                                alert('You cannot add more products than what is in stock');
-                                return;
-                              }
                               setQuantity(product.id, quantity + 1);
                             }}
                             className="px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 transition-colors duration-200"

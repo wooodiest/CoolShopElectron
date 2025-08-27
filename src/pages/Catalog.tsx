@@ -129,7 +129,7 @@ export default function Catalog() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {items.map(p => {
           const stockStatus = getStockStatus(p.stock, p.availabilityStatus);
-          const priceInfo = formatPrice(p.price, p.discountPercentage);
+          const priceInfo   = formatPrice(p.price, p.discountPercentage);
           
           return (
             <Link 
@@ -158,16 +158,12 @@ export default function Catalog() {
                 </div>
               </div>
               
+              {/* Product info */}
               <div className="p-6">
-                {/* Brand */}
-                <div className="text-sm text-blue-600 font-medium mb-1">{p.brand}</div>
-                
-                {/* Title */}
+                <div className="text-sm text-blue-600 font-medium mb-1">{p.brand}</div>             
                 <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors duration-200">
                   {p.title}
-                </h3>
-                
-                {/* Rating */}
+                </h3>         
                 <div className="flex items-center space-x-1 mb-3">
                   <div className="flex items-center">
                     {[1, 2, 3, 4, 5].map((star) => (

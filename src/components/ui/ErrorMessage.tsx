@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function ErrorMessage({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
-    <div className="bg-red-50 border border-red-200 rounded-xl p-6 max-w-2xl mx-auto">
+    <div role="alert" className="bg-red-50 border border-red-200 rounded-xl p-6 max-w-2xl mx-auto">
       <div className="flex items-start space-x-4">
         <div className="flex-shrink-0">
           <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">

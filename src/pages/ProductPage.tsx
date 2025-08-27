@@ -8,13 +8,6 @@ import Loader from '../components/ui/Loader';
 import ErrorMessage from '../components/ui/ErrorMessage';
 import CachedImage from '../components/ui/CachedImage';
 
-/**
- * Compact, professional product page version
- * - Hero: Gallery + key information and CTA
- * - Sticky cart (desktop): always accessible
- * - Section with tabs (Description / Specifications / Reviews)
- * - Lighter typography, less "wall of text"
- */
 export default function ProductPage() {
   const { id } = useParams();
   const [product, setProduct] = React.useState<Product | null>(null);
@@ -96,9 +89,9 @@ export default function ProductPage() {
     );
   }
 
-  const priceInfo = formatPrice(product.price, product.discountPercentage);
+  const priceInfo   = formatPrice(product.price, product.discountPercentage);
   const stockStatus = getStockStatus(product.stock, product.availabilityStatus);
-  const StockIcon = stockStatus.icon;
+  const StockIcon   = stockStatus.icon;
 
   return (
     <div className="max-w-6xl mx-auto p-6">
@@ -120,7 +113,6 @@ export default function ProductPage() {
         </ol>
       </nav>
 
-      {/* HERO: Gallery + information + sticky cart */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Gallery */}
         <div className="lg:col-span-6 mb-4 lg:mb-0">
@@ -133,20 +125,15 @@ export default function ProductPage() {
           />
         </div>
 
-        {/* Info + CTA (sticky on desktop) */}
+        {/* Product Info  */}
         <div className="lg:col-span-6">
           <section className="space-y-4">
-            {/* Brand / category */}
             <div className="flex items-center gap-3 text-sm">
               <span className="text-blue-600 font-medium">{product.brand}</span>
               <span className="text-gray-300">•</span>
               <span className="text-gray-600 capitalize">{product.category}</span>
             </div>
-
-            {/* Title */}
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">{product.title}</h1>
-
-            {/* Rating + status */}
             <div className="flex flex-wrap items-center gap-4">
               <RatingStars rating={product.rating} reviews={product.reviews.length} />
               <span className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium ${stockStatus.bgColor} ${stockStatus.color}`}>
@@ -154,8 +141,6 @@ export default function ProductPage() {
                 {stockStatus.text}
               </span>
             </div>
-
-            {/* Price */}
             <div className="flex items-end gap-3">
               <span className="text-3xl md:text-4xl font-bold text-blue-600">${priceInfo.discounted}</span>
               {priceInfo.hasDiscount && (
@@ -167,11 +152,7 @@ export default function ProductPage() {
                 </>
               )}
             </div>
-
-            {/* Short description (1-2 lines) */}
             <p className="text-gray-600 leading-relaxed line-clamp-3">{product.description}</p>
-
-            {/* Sticky cart */}
             <div className="lg:sticky lg:top-28">
               <AddToCartCard
                 id={product.id}
@@ -188,7 +169,7 @@ export default function ProductPage() {
         </div>
       </div>
 
-      {/* Tabs: Description / Specifications / Reviews */}
+      {/* Description / Specifications / Reviews */}
       <section className="mt-10">
         <Tabs value={tab} onChange={setTab} items={[
           { value: 'description', label: 'Description' },
@@ -200,7 +181,6 @@ export default function ProductPage() {
           {tab === 'description' && (
             <div className="prose max-w-none prose-gray">
               <p className="text-gray-700 text-base leading-7">{product.description}</p>
-              {/* Tagi */}
               {product.tags?.length > 0 && (
                 <div className="mt-6 flex flex-wrap gap-2">
                   {product.tags.map((tag, i) => (
@@ -262,7 +242,6 @@ export default function ProductPage() {
   );
 }
 
-/* ----------------------------- WSPÓŁDZIELONE UI ---------------------------- */
 function PageChrome({ title, subtitle, children, onRefresh, loading }: {
   title: string;
   subtitle?: string;
@@ -305,7 +284,7 @@ function ProductGallery({
   selectedIndex: number;
   onSelect: (i: number) => void;
 }) {
-  const list = [thumbnail, ...(images || [])];
+  const list    = [thumbnail, ...(images || [])];
   const current = list[selectedIndex] || thumbnail;
 
   return (
@@ -341,7 +320,6 @@ function ProductGallery({
 function AddToCartCard({
   id,
   stock,
-  availabilityStatus,
   quantity,
   setQuantity,
   onAdd,
@@ -349,7 +327,6 @@ function AddToCartCard({
   addedToCart,
 }: {
   stock: number;
-  availabilityStatus: string;
   quantity: number;
   setQuantity: (n: number) => void;
   onAdd: () => void;
@@ -376,7 +353,6 @@ function AddToCartCard({
         <span className="font-medium">{stock} pcs</span>
       </div>
 
-      {/* Quantity */}
       <div className="flex items-center justify-between mb-4">
         <label className="text-sm font-medium text-gray-700">Quantity</label>
         <div className="flex items-center">
@@ -399,7 +375,7 @@ function AddToCartCard({
                 const cartItem = useCartStore.getState().items[id];
                 const currentInCart = cartItem?.quantity ?? 0;
                 if (currentInCart + newQuantity > stock) {
-                  alert('Nie możesz dodać więcej produktów niż dostępne w magazynie');
+                  alert('You cannot add more products than what is in stock');
                   return;
                 }
                 setQuantity(newQuantity);
@@ -410,7 +386,6 @@ function AddToCartCard({
                 const cartItem = useCartStore.getState().items[id];
                 const currentInCart = cartItem?.quantity ?? 0;
                 if (currentInCart + quantity >= stock) {
-                  alert('Nie możesz dodać więcej produktów niż dostępne w magazynie');
                   return;
                 }
                 setQuantity(quantity + 1);
@@ -424,7 +399,6 @@ function AddToCartCard({
         </div>
       </div>
 
-      {/* CTA */}
       <button
         onClick={handleAddToCart}
         disabled={disabled}
@@ -566,23 +540,3 @@ function CartIcon(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
-function HeartIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-    </svg>
-  );
-}
-function ShareIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342A3 3 0 119 12a3 3 0 01-.316 1.342m0 0l6.632 3.316m-6.632-6l6.632-3.316M17 6a3 3 0 105.367-2.684A3 3 0 0017 6zm0 12a3 3 0 105.367 2.684A3 3 0 0017 18z" />
-    </svg>
-  );
-}
-
-/* ------------------------------ Drobne CSS-y ------------------------------ */
-// Ukrycie scrollbara dla pasków miniatur/tabs
-// Dodaj do global.css jeśli chcesz globalnie
-// .no-scrollbar::-webkit-scrollbar { display: none; }
-// .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
