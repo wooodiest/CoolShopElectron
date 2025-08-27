@@ -1,6 +1,7 @@
 import React from 'react';
 import { useCartStore } from '../store/cart';
 import CachedImage from '../components/ui/CachedImage';
+import { Link } from 'react-router-dom';
 
 export default function Cart() {
   const items = useCartStore(s => s.items);
@@ -76,13 +77,13 @@ export default function Cart() {
                   <div key={product.id} className="p-6 hover:bg-gray-50 transition-colors duration-200">
                     <div className="flex items-center space-x-4">
                       {/* Product Image */}
-                      <div className="flex-shrink-0">
+                      <Link to={`/product/${product.id}`} className="flex-shrink-0 hover:opacity-80 transition-opacity">
                         <CachedImage 
                           src={product.thumbnail} 
                           alt={product.title} 
                           className="w-20 h-20 object-cover rounded-lg border border-gray-200" 
                         />
-                      </div>
+                      </Link>
 
                       {/* Product Details */}
                       <div className="flex-1 min-w-0">
@@ -91,7 +92,9 @@ export default function Cart() {
                           <span className="text-gray-400">•</span>
                           <span className="text-sm text-gray-500 capitalize">{product.category}</span>
                         </div>
-                        <h3 className="text-lg font-medium text-gray-900 truncate">{product.title}</h3>
+                        <Link to={`/product/${product.id}`}>
+                          <h3 className="text-lg font-medium text-gray-900 truncate hover:text-blue-600 transition-colors">{product.title}</h3>
+                        </Link>
                         <p className="text-sm text-gray-500 mt-1">SKU: {product.sku}</p>
                         
                         {/* Price and Stock */}
