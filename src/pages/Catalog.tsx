@@ -40,6 +40,21 @@ export default function Catalog() {
     return () => { cancelled = true };
   }, []);
 
+  const getStockStatus = (stock: number, availabilityStatus: string) => {
+    if (stock === 0) return { text: 'Out of Stock', color: 'bg-red-100 text-red-800' };
+    if (stock <= 5 || availabilityStatus === 'Low Stock') return { text: 'Low Stock', color: 'bg-yellow-100 text-yellow-800' };
+    return { text: 'In Stock', color: 'bg-green-100 text-green-800' };
+  };
+
+  const formatPrice = (price: number, discountPercentage: number) => {
+    const discountedPrice = price - (price * discountPercentage / 100);
+    return {
+      original: price.toFixed(2),
+      discounted: discountedPrice.toFixed(2),
+      hasDiscount: discountPercentage > 0
+    };
+  };
+
   if (error) {
     return (
       <div className="max-w-7xl mx-auto">
@@ -112,42 +127,92 @@ export default function Catalog() {
 
       {/* Products Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {items.map(p => (
-          <Link 
-            key={p.id} 
-            to={`/product/${p.id}`} 
-            className="group bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-blue-200"
-          >
-            <div className="relative overflow-hidden">
-              <CachedImage 
-                src={p.thumbnail} 
-                alt={p.title} 
-                className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" 
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            </div>
-            <div className="p-6">
-              <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors duration-200">
-                {p.title}
-              </h3>
-              <div className="flex items-center justify-between">
-                <span className="text-2xl font-bold text-blue-600">${p.price}</span>
-                <div className="flex items-center space-x-1 text-yellow-400">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                  <span className="text-sm text-gray-600">4.5</span>
+        {items.map(p => {
+          const stockStatus = getStockStatus(p.stock, p.availabilityStatus);
+          const priceInfo = formatPrice(p.price, p.discountPercentage);
+          
+          return (
+            <Link 
+              key={p.id} 
+              to={`/product/${p.id}`} 
+              className="group bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-blue-200"
+            >
+              <div className="relative overflow-hidden">
+                <CachedImage 
+                  src={p.thumbnail} 
+                  alt={p.title} 
+                  className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" 
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                
+                {/* Discount Badge */}
+                {priceInfo.hasDiscount && (
+                  <div className="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+                    -{p.discountPercentage.toFixed(0)}%
+                  </div>
+                )}
+                
+                {/* Stock Status */}
+                <div className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-medium ${stockStatus.color}`}>
+                  {stockStatus.text}
                 </div>
               </div>
-              <div className="mt-3 flex items-center justify-between">
-                <span className="text-sm text-gray-500">Free shipping</span>
-                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">
-                  In Stock
-                </span>
+              
+              <div className="p-6">
+                {/* Brand */}
+                <div className="text-sm text-blue-600 font-medium mb-1">{p.brand}</div>
+                
+                {/* Title */}
+                <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors duration-200">
+                  {p.title}
+                </h3>
+                
+                {/* Rating */}
+                <div className="flex items-center space-x-1 mb-3">
+                  <div className="flex items-center">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <svg 
+                        key={star} 
+                        className={`w-4 h-4 ${star <= Math.round(p.rating) ? 'text-yellow-400' : 'text-gray-300'}`} 
+                        fill="currentColor" 
+                        viewBox="0 0 20 20"
+                      >
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
+                  </div>
+                  <span className="text-sm text-gray-600">({p.reviews.length})</span>
+                </div>
+                
+                {/* Price */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-2xl font-bold text-blue-600">${priceInfo.discounted}</span>
+                    {priceInfo.hasDiscount && (
+                      <span className="text-sm text-gray-500 line-through">${priceInfo.original}</span>
+                    )}
+                  </div>
+                  <span className="text-sm text-gray-500">Stock: {p.stock}</span>
+                </div>
+                
+                {/* Tags */}
+                <div className="flex flex-wrap gap-1 mb-3">
+                  {p.tags.slice(0, 2).map((tag, index) => (
+                    <span 
+                      key={index} 
+                      className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                  {p.tags.length > 2 && (
+                    <span className="text-xs text-gray-500">+{p.tags.length - 2} more</span>
+                  )}
+                </div>
               </div>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          );
+        })}
       </div>
 
       {/* Empty State */}

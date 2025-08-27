@@ -14,6 +14,7 @@ export default function ProductPage() {
   const [loading, setLoading] = React.useState<boolean>(false);
   const [quantity, setQuantity] = React.useState(1);
   const [addedToCart, setAddedToCart] = React.useState(false);
+  const [selectedImage, setSelectedImage] = React.useState(0);
   const addItem = useCartStore(s => s.addItem);
 
   const load = React.useCallback(async () => {
@@ -53,6 +54,29 @@ export default function ProductPage() {
       setAddedToCart(true);
       setTimeout(() => setAddedToCart(false), 2000);
     }
+  };
+
+  const formatPrice = (price: number, discountPercentage: number) => {
+    const discountedPrice = price - (price * discountPercentage / 100);
+    return {
+      original: price.toFixed(2),
+      discounted: discountedPrice.toFixed(2),
+      hasDiscount: discountPercentage > 0
+    };
+  };
+
+  const getStockStatus = (stock: number, availabilityStatus: string) => {
+    if (stock === 0) return { text: 'Out of Stock', color: 'text-red-600', bgColor: 'bg-red-100' };
+    if (stock <= 5 || availabilityStatus === 'Low Stock') return { text: 'Low Stock', color: 'text-yellow-600', bgColor: 'bg-yellow-100' };
+    return { text: 'In Stock', color: 'text-green-600', bgColor: 'bg-green-100' };
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
   };
 
   if (error) {
@@ -105,6 +129,9 @@ export default function ProductPage() {
     );
   }
 
+  const priceInfo = formatPrice(product.price, product.discountPercentage);
+  const stockStatus = getStockStatus(product.stock, product.availabilityStatus);
+
   return (
     <div className="max-w-6xl mx-auto">
       {/* Breadcrumb */}
@@ -125,56 +152,114 @@ export default function ProductPage() {
       </nav>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        {/* Product Image */}
+        {/* Product Images */}
         <div className="space-y-6">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <CachedImage 
-              src={product.thumbnail} 
+              src={product.images[selectedImage] || product.thumbnail} 
               alt={product.title} 
               className="w-full h-96 lg:h-[500px] object-cover hover:scale-105 transition-transform duration-300" 
             />
           </div>
           
-          {/* Product Gallery Placeholder */}
-          <div className="grid grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-gray-100 rounded-lg h-24 flex items-center justify-center">
-                <span className="text-gray-400 text-sm">Image {i}</span>
-              </div>
-            ))}
-          </div>
+          {/* Product Gallery */}
+          {product.images.length > 1 && (
+            <div className="grid grid-cols-4 gap-4">
+              {product.images.map((image, index) => (
+                <button
+                  key={index}
+                  onClick={() => setSelectedImage(index)}
+                  className={`bg-gray-100 rounded-lg h-24 overflow-hidden border-2 transition-all duration-200 ${
+                    selectedImage === index ? 'border-blue-500' : 'border-transparent hover:border-gray-300'
+                  }`}
+                >
+                  <CachedImage 
+                    src={image} 
+                    alt={`${product.title} - Image ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Product Details */}
         <div className="space-y-8">
           <div>
+            {/* Brand & Category */}
+            <div className="flex items-center space-x-4 mb-4">
+              <span className="text-blue-600 font-medium">{product.brand}</span>
+              <span className="text-gray-400">•</span>
+              <span className="text-gray-600 capitalize">{product.category}</span>
+            </div>
+
             <h1 className="text-4xl font-bold text-gray-900 mb-4">{product.title}</h1>
             
-            {/* Rating */}
+            {/* Rating & Reviews */}
             <div className="flex items-center space-x-4 mb-6">
               <div className="flex items-center space-x-1">
                 {[1, 2, 3, 4, 5].map((star) => (
-                  <svg key={star} className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                  <svg 
+                    key={star} 
+                    className={`w-5 h-5 ${star <= Math.round(product.rating) ? 'text-yellow-400' : 'text-gray-300'}`} 
+                    fill="currentColor" 
+                    viewBox="0 0 20 20"
+                  >
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
                 ))}
-                <span className="text-gray-600 ml-2">4.5 (128 reviews)</span>
+                <span className="text-gray-600 ml-2">{product.rating.toFixed(1)} ({product.reviews.length} reviews)</span>
               </div>
-              <span className="text-green-600 font-medium">In Stock</span>
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${stockStatus.bgColor} ${stockStatus.color}`}>
+                {stockStatus.text}
+              </span>
             </div>
 
             {/* Price */}
-            <div className="text-4xl font-bold text-blue-600 mb-6">${product.price}</div>
+            <div className="mb-6">
+              <div className="flex items-center space-x-3">
+                <span className="text-4xl font-bold text-blue-600">${priceInfo.discounted}</span>
+                {priceInfo.hasDiscount && (
+                  <>
+                    <span className="text-xl text-gray-500 line-through">${priceInfo.original}</span>
+                    <span className="bg-red-500 text-white px-2 py-1 rounded-full text-sm font-bold">
+                      Save {product.discountPercentage.toFixed(0)}%
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
 
             {/* Description */}
-            <div className="prose prose-gray max-w-none">
+            <div className="prose prose-gray max-w-none mb-6">
               <p className="text-gray-600 text-lg leading-relaxed">{product.description}</p>
+            </div>
+
+            {/* Tags */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              {product.tags.map((tag, index) => (
+                <span 
+                  key={index} 
+                  className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium"
+                >
+                  {tag}
+                </span>
+              ))}
             </div>
           </div>
 
           {/* Add to Cart Section */}
           <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
             <div className="space-y-6">
+              {/* Stock Info */}
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Available Stock</span>
+                <span className="font-medium">{product.stock} units</span>
+              </div>
+
+              {/* Minimum Order section removed */}
+
               {/* Quantity Selector */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">Quantity</label>
@@ -211,13 +296,23 @@ export default function ProductPage() {
               {/* Add to Cart Button */}
               <button
                 onClick={handleAddToCart}
+                disabled={product.stock === 0}
                 className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center space-x-3 ${
-                  addedToCart
+                  product.stock === 0
+                    ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                    : addedToCart
                     ? 'bg-green-600 text-white'
                     : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-sm hover:shadow-md'
                 }`}
               >
-                {addedToCart ? (
+                {product.stock === 0 ? (
+                  <>
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
+                    </svg>
+                    <span>Out of Stock</span>
+                  </>
+                ) : addedToCart ? (
                   <>
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -229,7 +324,7 @@ export default function ProductPage() {
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
                     </svg>
-                    <span>Add to Cart - ${(product.price * quantity).toFixed(2)}</span>
+                    <span>Add to Cart - ${(parseFloat(priceInfo.discounted) * quantity).toFixed(2)}</span>
                   </>
                 )}
               </button>
@@ -252,27 +347,82 @@ export default function ProductPage() {
             </div>
           </div>
 
-          {/* Product Info */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between py-3 border-b border-gray-200">
-              <span className="text-gray-600">Product ID</span>
-              <span className="font-medium">{product.id}</span>
-            </div>
-            <div className="flex items-center justify-between py-3 border-b border-gray-200">
-              <span className="text-gray-600">Brand</span>
-              <span className="font-medium">CoolShop</span>
-            </div>
-            <div className="flex items-center justify-between py-3 border-b border-gray-200">
-              <span className="text-gray-600">Shipping</span>
-              <span className="text-green-600 font-medium">Free</span>
-            </div>
-            <div className="flex items-center justify-between py-3">
-              <span className="text-gray-600">Return Policy</span>
-              <span className="font-medium">30 days</span>
+          {/* Product Information */}
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <div className="flex justify-between py-2 border-b border-gray-100">
+                  <span className="text-gray-600">SKU</span>
+                  <span className="font-medium">{product.sku}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-gray-100">
+                  <span className="text-gray-600">Weight</span>
+                  <span className="font-medium">{product.weight}g</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-gray-100">
+                  <span className="text-gray-600">Brand</span>
+                  <span className="font-medium">{product.brand}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-gray-100">
+                  <span className="text-gray-600">Category</span>
+                  <span className="font-medium capitalize">{product.category}</span>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between py-2 border-b border-gray-100">
+                  <span className="text-gray-600">Warranty</span>
+                  <span className="font-medium">{product.warrantyInformation}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-gray-100">
+                  <span className="text-gray-600">Shipping</span>
+                  <span className="font-medium">{product.shippingInformation}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-gray-100">
+                  <span className="text-gray-600">Return Policy</span>
+                  <span className="font-medium">{product.returnPolicy}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-gray-100">
+                  <span className="text-gray-600">Barcode</span>
+                  <span className="font-medium font-mono text-sm">{product.meta.barcode}</span>
+                </div>
+              </div>
             </div>
           </div>
+
+          {/* Reviews Section */}
+          {product.reviews.length > 0 && (
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Customer Reviews</h3>
+              <div className="space-y-4">
+                {product.reviews.map((review, index) => (
+                  <div key={index} className="border-b border-gray-100 pb-4 last:border-b-0">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center space-x-2">
+                        <div className="flex items-center">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <svg 
+                              key={star} 
+                              className={`w-4 h-4 ${star <= review.rating ? 'text-yellow-400' : 'text-gray-300'}`} 
+                              fill="currentColor" 
+                              viewBox="0 0 20 20"
+                            >
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                          ))}
+                        </div>
+                        <span className="font-medium text-gray-900">{review.reviewerName}</span>
+                      </div>
+                      <span className="text-sm text-gray-500">{formatDate(review.date)}</span>
+                    </div>
+                    <p className="text-gray-600">{review.comment}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
-} 
+}
