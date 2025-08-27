@@ -210,15 +210,12 @@ export default function Cart() {
                 <span className="text-gray-600">Shipping</span>
                 <span className="text-green-600 font-medium">Free</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Tax</span>
-                <span className="font-medium">${(total * 0.08).toFixed(2)}</span>
-              </div>
+
               
               <div className="border-t border-gray-200 pt-4">
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span className="text-blue-600">${(total * 1.08).toFixed(2)}</span>
+                  <span className="text-blue-600">${(total).toFixed(2)}</span>
                 </div>
               </div>
             </div>

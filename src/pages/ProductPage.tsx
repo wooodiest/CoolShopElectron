@@ -1,5 +1,6 @@
 import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../store/auth';
 import { getProduct } from '../services/products';
 import type { Product } from '../models/Product';
 import { useCartStore } from '../store/cart';
@@ -347,8 +348,18 @@ function AddToCartCard({
   unitPrice: number;
   addedToCart: boolean;
 }) {
+  const { isAuthenticated } = useAuthStore();
+  const navigate = useNavigate();
   const disabled = stock === 0;
   const total = (unitPrice * quantity).toFixed(2);
+
+  const handleAddToCart = () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    onAdd();
+  };
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm mt-1">
@@ -364,21 +375,21 @@ function AddToCartCard({
           <div className="flex items-center border border-gray-300 rounded-lg bg-white">
             <button
               onClick={() => setQuantity(Math.max(1, quantity - 1))}
-              className="px-3 py-1.5 text-gray-700 hover:bg-gray-100 font-medium"
+              className="px-3 py-1.5 text-gray-700 hover:bg-gray-100 font-medium cursor-pointer"
               aria-label="Decrease quantity"
             >
               −
             </button>
             <input
               type="number"
-              className="w-16 text-center py-1.5 border-0 focus:ring-0 bg-transparent"
+              className="w-16 text-center py-1.5 border-0 focus:ring-0 bg-transparent cursor-text"
               min={1}
               value={quantity}
               onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
             />
             <button
               onClick={() => setQuantity(quantity + 1)}
-              className="px-3 py-1.5 text-gray-700 hover:bg-gray-100 font-medium"
+              className="px-3 py-1.5 text-gray-700 hover:bg-gray-100 font-medium cursor-pointer"
               aria-label="Increase quantity"
             >
               +
@@ -389,14 +400,14 @@ function AddToCartCard({
 
       {/* CTA */}
       <button
-        onClick={onAdd}
+        onClick={handleAddToCart}
         disabled={disabled}
         className={`w-full py-3 px-4 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${
           disabled
             ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
             : addedToCart
-            ? 'bg-emerald-600 text-white'
-            : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-sm'
+            ? 'bg-emerald-600 text-white cursor-default'
+            : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-sm cursor-pointer'
         }`}
       >
         {disabled ? (

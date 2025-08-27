@@ -114,7 +114,7 @@ export default function Catalog() {
           <p className="text-gray-600">Discover amazing products at great prices</p>
         </div>
         <button 
-          className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-medium shadow-sm hover:shadow-md flex items-center space-x-2"
+          className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-medium shadow-sm hover:shadow-md flex items-center space-x-2 cursor-pointer"
           onClick={load} 
           disabled={loading}
         >
