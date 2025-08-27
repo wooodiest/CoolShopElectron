@@ -138,11 +138,23 @@ export default function Cart() {
                             type="number"
                             className="w-16 text-center py-2 border-0 focus:ring-0 focus:outline-none"
                             min={1}
+                            max={product.stock}
                             value={quantity}
-                            onChange={(e) => setQuantity(product.id, Math.max(1, Number(e.target.value)))}
+                            onChange={(e) => {
+                              const newValue = Math.max(1, Math.min(Number(e.target.value), product.stock));
+                              setQuantity(product.id, newValue);
+                            }}
                           />
                           <button
-                            onClick={() => setQuantity(product.id, quantity + 1)}
+                            onClick={() => {
+                              const cartItem = useCartStore.getState().items[product.id];
+                              const currentInCart = cartItem?.quantity ?? 0;
+                              if (currentInCart + quantity >= product.stock) {
+                                alert('You cannot add more products than what is in stock');
+                                return;
+                              }
+                              setQuantity(product.id, quantity + 1);
+                            }}
                             className="px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 transition-colors duration-200"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -209,9 +221,7 @@ export default function Cart() {
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Shipping</span>
                 <span className="text-green-600 font-medium">Free</span>
-              </div>
-
-              
+              </div>         
               <div className="border-t border-gray-200 pt-4">
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
@@ -220,7 +230,11 @@ export default function Cart() {
               </div>
             </div>
 
-            <button className="w-full mt-6 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 font-medium shadow-sm hover:shadow-md flex items-center justify-center space-x-2">
+            <button onClick={
+              () => {
+               alert('Proceed to Checkout...');
+              }
+            } className="w-full mt-6 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 font-medium shadow-sm hover:shadow-md flex items-center justify-center space-x-2 cursor-pointer">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
               </svg>

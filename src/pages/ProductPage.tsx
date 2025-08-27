@@ -46,6 +46,12 @@ export default function ProductPage() {
 
   const handleAddToCart = () => {
     if (product) {
+      const cartItem = useCartStore.getState().items[product.id];
+      const currentInCart = cartItem?.quantity ?? 0;
+      if (currentInCart + quantity > product.stock) {
+        alert('You cannot add more products than what is in stock');
+        return;
+      }
       addItem(product, quantity);
       setAddedToCart(true);
       setTimeout(() => setAddedToCart(false), 1800);
@@ -168,6 +174,7 @@ export default function ProductPage() {
             {/* Sticky cart */}
             <div className="lg:sticky lg:top-28">
               <AddToCartCard
+                id={product.id}
                 stock={product.stock}
                 availabilityStatus={product.availabilityStatus}
                 quantity={quantity}
@@ -332,6 +339,7 @@ function ProductGallery({
 }
 
 function AddToCartCard({
+  id,
   stock,
   availabilityStatus,
   quantity,
@@ -384,11 +392,29 @@ function AddToCartCard({
               type="number"
               className="w-16 text-center py-1.5 border-0 focus:ring-0 bg-transparent cursor-text"
               min={1}
+              max={stock}
               value={quantity}
-              onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
+              onChange={(e) => {
+                const newQuantity = Math.max(1, Number(e.target.value));
+                const cartItem = useCartStore.getState().items[id];
+                const currentInCart = cartItem?.quantity ?? 0;
+                if (currentInCart + newQuantity > stock) {
+                  alert('Nie możesz dodać więcej produktów niż dostępne w magazynie');
+                  return;
+                }
+                setQuantity(newQuantity);
+              }}
             />
             <button
-              onClick={() => setQuantity(quantity + 1)}
+              onClick={() => {
+                const cartItem = useCartStore.getState().items[id];
+                const currentInCart = cartItem?.quantity ?? 0;
+                if (currentInCart + quantity >= stock) {
+                  alert('Nie możesz dodać więcej produktów niż dostępne w magazynie');
+                  return;
+                }
+                setQuantity(quantity + 1);
+              }}
               className="px-3 py-1.5 text-gray-700 hover:bg-gray-100 font-medium cursor-pointer"
               aria-label="Increase quantity"
             >
