@@ -4,13 +4,24 @@ import path from 'node:path';
 let mainWindow: BrowserWindow | null = null;
 
 const createWindow = () => {
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.focus();
+    return;
+  }
+
   mainWindow = new BrowserWindow({
     width: 1600,
     height: 900,
+    title: 'CoolShop',
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, 'preload.js')
     },
     autoHideMenuBar: true,
+    backgroundColor: '#ffffff',
+    minWidth: 1200,
+    minHeight: 800,
+    center: true,
   });
 
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
@@ -21,6 +32,7 @@ const createWindow = () => {
 
   // mainWindow.webContents.openDevTools();
 };
+
 
 app.whenReady().then(() => {
   createWindow();
